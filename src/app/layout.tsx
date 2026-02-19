@@ -8,11 +8,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Lottery Reality Check",
+  title: "Face the Odds",
   description:
     "Visualize your odds of winning the lottery. Spoiler: they're terrible.",
   openGraph: {
-    title: "Lottery Reality Check",
+    title: "Face the Odds",
     description:
       "139,838,160 tickets. 1 jackpot. Can you find it?",
     type: "website",

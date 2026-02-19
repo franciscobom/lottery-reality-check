@@ -129,11 +129,11 @@ export default function JackpotBanner({
   const handleShare = useCallback(() => {
     const url = window.location.href;
     const text = gaveUp
-      ? `I gave up on Lottery Reality Check after ${tally.revealed.toLocaleString()} tickets. Can you do better?`
-      : `I found the jackpot in Lottery Reality Check! Spent ${config.currency} ${tally.spent.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Try to beat that.`;
+      ? `I gave up on Face the Odds after ${tally.revealed.toLocaleString()} tickets. Can you do better?`
+      : `I found the jackpot in Face the Odds! Spent ${config.currency} ${tally.spent.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Try to beat that.`;
 
     if (typeof navigator.share === "function") {
-      navigator.share({ title: "Lottery Reality Check", text, url }).catch(() => {});
+      navigator.share({ title: "Face the Odds", text, url }).catch(() => {});
     } else {
       navigator.clipboard.writeText(url).then(() => {
         setCopied(true);

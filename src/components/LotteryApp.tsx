@@ -98,6 +98,7 @@ export default function LotteryApp() {
   const [isRevealing, setIsRevealing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showIntro, setShowIntro] = useState(true);
+  const [headerCopied, setHeaderCopied] = useState(false);
 
   // Jackpot / Give-up state
   const [jackpotFound, setJackpotFound] = useState(false);
@@ -476,6 +477,18 @@ export default function LotteryApp() {
     setShowBanner(false);
   }, []);
 
+  const handleHeaderShare = useCallback(() => {
+    const url = window.location.href;
+    if (typeof navigator.share === "function") {
+      navigator.share({ title: "Face the Odds", url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setHeaderCopied(true);
+        setTimeout(() => setHeaderCopied(false), 2000);
+      });
+    }
+  }, []);
+
   // Progress toward give-up threshold
   const giveUpProgress = Math.min(tally.revealed / GIVE_UP_THRESHOLD, 1);
   const giveUpReady = tally.revealed >= GIVE_UP_THRESHOLD;
@@ -489,7 +502,7 @@ export default function LotteryApp() {
       <div className="flex items-start justify-center min-h-screen bg-slate-950 overflow-y-auto py-4">
         <div className="max-w-lg w-full mx-4 p-6 bg-slate-900 rounded-2xl border border-slate-700">
           <h1 className="text-3xl font-bold text-slate-100 font-mono mb-3">
-            Lottery Reality Check
+            Face the Odds
           </h1>
           <hr className="border-white mb-4" />
           <h2 className="text-xl font-bold text-slate-100 font-mono mb-2">
@@ -605,12 +618,21 @@ export default function LotteryApp() {
       <header className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-slate-800 bg-slate-950/90 backdrop-blur-sm z-20">
         <div className="flex items-center gap-2 sm:gap-4">
           <h1 className="text-sm sm:text-lg font-bold text-slate-100 font-mono">
-            Lottery Reality Check
+            Face the Odds
           </h1>
           <LotterySelector
             currentLottery={lotteryType}
             onSelect={handleLotteryChange}
           />
+        </div>
+
+        {/* Mobile share button */}
+        <button
+          onClick={handleHeaderShare}
+          className="sm:hidden px-2.5 py-1.5 rounded-lg font-mono text-xs text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200 transition-colors whitespace-nowrap"
+        >
+          {headerCopied ? "Copied!" : "Share"}
+        </button>
 
           {/* Jackpot display + edit popover (desktop only) */}
           {lotteryConfig && (
@@ -690,7 +712,6 @@ export default function LotteryApp() {
               )}
             </div>
           )}
-        </div>
 
       </header>
 
