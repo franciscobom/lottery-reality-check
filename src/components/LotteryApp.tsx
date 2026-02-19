@@ -714,7 +714,7 @@ export default function LotteryApp() {
             Try your lucky combination
           </span>
           <CombinationInput
-            key={lotteryType}
+            key={seed ?? lotteryType}
             ref={comboInputRef}
             config={effectiveConfig}
             jackpotCombo={jackpotComboRef.current}
