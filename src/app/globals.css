@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+body {
+  background: #020617;
+  color: #e2e8f0;
+  overflow: hidden;
+}
+
+/* Prevent text selection on canvas interactions */
+canvas {
+  -webkit-user-select: none;
+  user-select: none;
+}
