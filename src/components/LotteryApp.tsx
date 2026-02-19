@@ -28,7 +28,7 @@ import {
 } from "@/lib/client-prize-engine";
 import { getLotteryConfig } from "@/lib/lottery-config";
 
-const GIVE_UP_THRESHOLD = 100_000;
+const GIVE_UP_THRESHOLD = 20_000;
 
 const LOTTERY_ORDER = ["euromillions", "eurojackpot", "powerball", "megamillions"];
 
@@ -633,15 +633,6 @@ export default function LotteryApp() {
             currentLottery={lotteryType}
             onSelect={handleLotteryChange}
           />
-        </div>
-
-        {/* Mobile share button */}
-        <button
-          onClick={handleHeaderShare}
-          className="sm:hidden px-2.5 py-1.5 rounded-lg font-mono text-xs text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200 transition-colors whitespace-nowrap"
-        >
-          {headerCopied ? "Copied!" : "Share"}
-        </button>
 
           {/* Jackpot display + edit popover (desktop only) */}
           {lotteryConfig && (
@@ -721,7 +712,15 @@ export default function LotteryApp() {
               )}
             </div>
           )}
+        </div>
 
+        {/* Mobile share button */}
+        <button
+          onClick={handleHeaderShare}
+          className="sm:hidden px-2.5 py-1.5 rounded-lg font-mono text-xs text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200 transition-colors whitespace-nowrap"
+        >
+          {headerCopied ? "Copied!" : "Share"}
+        </button>
       </header>
 
       {/* Tally bar + Combination input */}

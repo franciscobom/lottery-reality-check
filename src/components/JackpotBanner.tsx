@@ -266,6 +266,38 @@ export default function JackpotBanner({
             RESET
           </button>
         </div>
+
+        <p className="mt-5 text-xs text-slate-600 font-mono italic">
+          {gaveUp ? (
+            <>
+              The house always wins. I built the house.
+              <br />
+              <a
+                href="https://buymeacoffee.com/fornogoodreason"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-500 hover:text-amber-500 underline underline-offset-2 transition-colors"
+              >
+                Buy me a coffee
+              </a>
+              ? ☕
+            </>
+          ) : (
+            <>
+              The jackpot was fake. The serotonin was real.
+              <br />
+              <a
+                href="https://buymeacoffee.com/fornogoodreason"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-500 hover:text-amber-500 underline underline-offset-2 transition-colors"
+              >
+                Buy me a coffee
+              </a>
+              ? ☕
+            </>
+          )}
+        </p>
       </div>
     </div>
   );
