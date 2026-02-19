@@ -24,11 +24,26 @@ const COLOR_DISABLED = "#0a0a0a";
 const COLOR_SELECTION = "rgba(59, 130, 246, 0.3)";
 const COLOR_SELECTION_BORDER = "rgba(59, 130, 246, 0.8)";
 const COLOR_LOSE = "#dc2626";
-const COLOR_WIN = "#22c55e";
 const COLOR_JACKPOT = "#fbbf24";
 const COLOR_JACKPOT_GLOW = "rgba(251, 191, 36, 0.4)";
 const COLOR_NEAR_MISS = "#a855f7";
 const COLOR_NEAR_MISS_GLOW = "rgba(168, 85, 247, 0.4)";
+
+// Tier-based win colors: index 0 = Tier 1 (best win, green) → index 11 = Tier 12 (worst win, dark orange)
+const TIER_WIN_COLORS = [
+  "#16a34a", // Tier 1  (€300,000) — deep green
+  "#22c55e", // Tier 2  (€50,000)  — green
+  "#84cc16", // Tier 3  (€3,000)   — lime
+  "#a3e635", // Tier 4  (€150)     — lime-yellow
+  "#facc15", // Tier 5  (€75)      — yellow
+  "#fbbf24", // Tier 6  (€50)      — amber
+  "#f59e0b", // Tier 7  (€15)      — amber-orange
+  "#f97316", // Tier 8  (€12)      — orange
+  "#ea580c", // Tier 9  (€10)      — dark orange
+  "#c2410c", // Tier 10 (€8)       — darker orange
+  "#9a3412", // Tier 11 (€5)       — very dark orange
+  "#7c2d12", // Tier 12 (€3)       — darkest orange
+];
 
 const FLIP_DURATION = 400;
 const MIN_ZOOM = 3;
@@ -46,7 +61,7 @@ const TAP_TIME = 300; // max ms to count as a tap
 function getResultColor(tierIndex: number, nearMiss?: boolean): string {
   if (nearMiss) return COLOR_NEAR_MISS;
   if (tierIndex === 0) return COLOR_JACKPOT;
-  if (tierIndex > 0) return COLOR_WIN;
+  if (tierIndex > 0) return TIER_WIN_COLORS[tierIndex - 1] ?? TIER_WIN_COLORS[TIER_WIN_COLORS.length - 1];
   return COLOR_LOSE;
 }
 
@@ -201,13 +216,14 @@ const GridCanvas = forwardRef<GridCanvasHandle, GridCanvasProps>(
             ctx.fillRect(sx + gap, sy + gap, cellSize - gap * 2, cellSize - gap * 2);
           }
 
-        const buckets: Record<string, [number, number][]> = { [COLOR_LOSE]: [], [COLOR_WIN]: [], [COLOR_JACKPOT]: [], [COLOR_NEAR_MISS]: [] };
+        const buckets: Record<string, [number, number][]> = {};
         for (let r = startRow; r < endRow; r++)
           for (let c = startCol; c < endCol; c++) {
             const idx = r * gridCols + c;
             if (idx >= totalCombinations || !revealed.has(idx) || animStartRef.current.has(idx)) continue;
             const cell = revealed.get(idx)!;
-            buckets[getResultColor(cell.tierIndex, cell.nearMiss)].push([c, r]);
+            const color = getResultColor(cell.tierIndex, cell.nearMiss);
+            (buckets[color] ??= []).push([c, r]);
           }
         for (const [color, cells] of Object.entries(buckets)) {
           ctx.fillStyle = color;

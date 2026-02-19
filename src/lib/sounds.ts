@@ -59,13 +59,19 @@ export function playRevealTick(tierIndex: number) {
     osc.start(t);
     osc.stop(t + 0.7);
   } else if (tierIndex > 0) {
-    // Win — subtle pleasant ding (quieter so batch reveals stay balanced)
+    // Win — pitch, duration, and gain scale with prize tier.
+    // Tier 1 (best win): high bright ding. Tier 12 (lowest win): short low ding.
+    const MAX_TIER = 12;
+    const normalized = (MAX_TIER - tierIndex) / (MAX_TIER - 1); // 0 = worst, 1 = best
+    const freq = 440 + normalized * (1047 - 440);   // 440 Hz → 1047 Hz
+    const dur  = 0.08 + normalized * 0.14;           // 80 ms → 220 ms
+    const vol  = 0.015 + normalized * 0.04;          // quiet → moderate
     osc.type = "sine";
-    osc.frequency.setValueAtTime(880, t);
-    gain.gain.setValueAtTime(0.02, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
     osc.start(t);
-    osc.stop(t + 0.1);
+    osc.stop(t + dur);
   } else {
     // Loss — punchy low thud with square wave for presence
     osc.type = "square";
@@ -116,16 +122,17 @@ export function playNearMissPing() {
 
 /**
  * Play a celebratory fanfare for jackpot win.
- * Multi-note ascending major arpeggio with sustained chord.
+ * Extended ascending major arpeggio (G4→E6) with a full sustained chord.
  */
 export function playJackpotFanfare() {
   const audioCtx = getCtx();
   if (!audioCtx) return;
 
   const t = audioCtx.currentTime;
-  const notes = [523, 659, 784, 1047]; // C5 - E5 - G5 - C6
-  const noteLen = 0.2;
-  const gap = 0.15;
+  // G4 - C5 - E5 - G5 - C6 - E6: wider range for a more triumphant feel
+  const notes = [392, 523, 659, 784, 1047, 1319];
+  const noteLen = 0.18;
+  const gap = 0.10;
 
   notes.forEach((freq, i) => {
     const osc = audioCtx.createOscillator();
@@ -135,25 +142,25 @@ export function playJackpotFanfare() {
     osc.type = "sine";
     const start = t + i * (noteLen + gap);
     osc.frequency.setValueAtTime(freq, start);
-    g.gain.setValueAtTime(0.15, start);
-    g.gain.exponentialRampToValueAtTime(0.001, start + noteLen + 0.3);
+    g.gain.setValueAtTime(0.22, start);
+    g.gain.exponentialRampToValueAtTime(0.001, start + noteLen + 0.35);
     osc.start(start);
-    osc.stop(start + noteLen + 0.3);
+    osc.stop(start + noteLen + 0.35);
   });
 
-  // Sustained major chord
+  // Full sustained major chord — all six pitches together
   const chordStart = t + notes.length * (noteLen + gap);
-  [523, 659, 784, 1047].forEach((freq) => {
+  notes.forEach((freq) => {
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     osc.connect(g);
     g.connect(audioCtx.destination);
     osc.type = "sine";
     osc.frequency.setValueAtTime(freq, chordStart);
-    g.gain.setValueAtTime(0.1, chordStart);
-    g.gain.exponentialRampToValueAtTime(0.001, chordStart + 1.5);
+    g.gain.setValueAtTime(0.14, chordStart);
+    g.gain.exponentialRampToValueAtTime(0.001, chordStart + 2.2);
     osc.start(chordStart);
-    osc.stop(chordStart + 1.5);
+    osc.stop(chordStart + 2.2);
   });
 }
 

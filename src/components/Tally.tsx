@@ -86,6 +86,11 @@ export default function Tally({
                 maximumFractionDigits: 2,
               })}
             </span>
+            {tally.won > 10_000 && !gaveUp && (
+              <span className="text-orange-400 font-mono text-[9px] sm:text-[10px] italic">
+                Don&apos;t forget to pay your taxes! 💸
+              </span>
+            )}
           </div>
           <div className="flex flex-col">
             <span className="text-slate-500 text-[10px] sm:text-xs font-mono uppercase tracking-wider">

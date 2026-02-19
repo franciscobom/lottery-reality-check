@@ -139,6 +139,49 @@ export function checkCellsBrowser(
 }
 
 /**
+ * Draw a random Mega Millions Megaplier (2×–10×) using the official distribution.
+ * Applied to every non-jackpot winning ticket in Mega Millions games.
+ */
+export function drawMegaMultiplier(): number {
+  const r = Math.random() * 75;
+  if (r < 35) return 2;  // 46.7%
+  if (r < 63) return 3;  // 37.3%
+  if (r < 69) return 4;  // 8.0%
+  if (r < 74) return 5;  // 6.7%
+  return 10;              // 1.3%
+}
+
+function gcd(a: number, b: number): number {
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+/**
+ * Derive deterministic shuffle parameters from the seed — HMAC-SHA256(seed, "shuffle")
+ * → two 6-byte values → (a, b) for the linear shuffle. `a` is adjusted to be
+ * coprime with totalCombinations so the shuffle is a bijection.
+ */
+export function deriveShuffleParamsBrowser(
+  seed: string,
+  totalCombinations: number
+): { a: number; b: number } {
+  const hash = hmacSha256(enc.encode(seed), enc.encode("shuffle"));
+  const aRaw =
+    hash[0] * 0x10000000000 + hash[1] * 0x100000000 +
+    hash[2] * 0x1000000     + hash[3] * 0x10000 +
+    hash[4] * 0x100          + hash[5];
+  const bRaw =
+    hash[6] * 0x10000000000 + hash[7] * 0x100000000 +
+    hash[8] * 0x1000000     + hash[9] * 0x10000 +
+    hash[10] * 0x100         + hash[11];
+  let a = (aRaw % totalCombinations) || 1;
+  while (gcd(a, totalCombinations) !== 1) {
+    a = ((a + 1) % totalCombinations) || 1;
+  }
+  return { a, b: bRaw % totalCombinations };
+}
+
+/**
  * Derive the jackpot combo index from the seed — HMAC-SHA256(seed, "jackpot")
  * → first 6 bytes → mod total. Same derivation as the server.
  */

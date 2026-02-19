@@ -2,7 +2,7 @@ export interface LotteryTier {
   name: string;
   match: string;
   probability: number; // e.g. 1/139838160 for jackpot
-  prize: number; // in EUR
+  prize: number; // in the lottery's currency
 }
 
 export interface LotteryConfig {
@@ -18,10 +18,22 @@ export interface LotteryConfig {
   bonusPool: number;
   bonusPick: number;
   bonusName: string;
+  jackpotMin: number;
+  jackpotMax: number;
+  jackpotDefault: number;
+  // How many tiers (from the top) scale proportionally when the jackpot changes.
+  // Top-tier prizes are divided among very few winners so they genuinely track the
+  // jackpot pool. Low-tier prizes are divided among many winners each draw, so they
+  // stay roughly constant regardless of jackpot size.
+  // European lotteries: 4 (jackpot + 3 near-jackpot tiers scale).
+  // US lotteries: 1 (only the jackpot itself changes; secondary prizes are fixed).
+  parimutuelTiers: number;
+  perTicketMultiplier?: boolean; // true → Mega Millions random multiplier per ticket
   tiers: LotteryTier[];
 }
 
 export interface GridConfig {
+  lotteryId: string;
   totalCombinations: number;
   gridCols: number;
   gridRows: number;
@@ -36,12 +48,8 @@ export interface GridConfig {
   tiers: LotteryTier[];
   shuffleA: number;
   shuffleB: number;
-}
-
-export interface SessionResponse {
-  token: string;
-  seed: string;
-  config: GridConfig;
+  parimutuelTiers?: number;
+  perTicketMultiplier?: boolean;
 }
 
 export interface RevealResult {
@@ -49,10 +57,6 @@ export interface RevealResult {
   tierIndex: number; // -1 = no prize, 0 = jackpot, 1..N = other tiers
   prize: number;
   nearMiss?: boolean;
-}
-
-export interface RevealResponse {
-  results: RevealResult[];
 }
 
 export type CellState = "unrevealed" | "revealed-none" | "revealed-prize";
@@ -82,12 +86,4 @@ export interface TallyState {
   won: number;
   revealed: number;
   nearMisses: number;
-}
-
-export interface Winner {
-  name: string;
-  lotteryType: string;
-  ticketsRevealed: number;
-  amountSpent: number;
-  timestamp: number;
 }

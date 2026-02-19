@@ -10,7 +10,7 @@ import {
 import { GridConfig, RevealResult } from "@/types";
 import { LotteryCombination, combinationToIndex } from "@/lib/combination";
 import { comboToGrid } from "@/lib/grid-shuffle";
-import { checkCellsBrowser } from "@/lib/client-prize-engine";
+import { checkCellsBrowser, drawMegaMultiplier } from "@/lib/client-prize-engine";
 
 export interface CombinationInputHandle {
   setAndSubmit: (main: number[], stars: number[]) => void;
@@ -41,6 +41,7 @@ const CombinationInput = forwardRef<
   const [lastResult, setLastResult] = useState<{
     tierIndex: number;
     prize: number;
+    multiplier?: number;
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -159,14 +160,27 @@ const CombinationInput = forwardRef<
         );
 
         const raw = results[0];
+
+        // Apply Mega Millions Megaplier to non-jackpot wins
+        let finalPrize = raw.prize;
+        let appliedMultiplier: number | undefined;
+        if (config.perTicketMultiplier && raw.tierIndex > 0 && raw.prize > 0) {
+          appliedMultiplier = drawMegaMultiplier();
+          finalPrize = Math.round(raw.prize * appliedMultiplier);
+        }
+
         const result: RevealResult = {
           index,
           tierIndex: raw.tierIndex,
-          prize: raw.prize,
+          prize: finalPrize,
           nearMiss: raw.nearMiss,
         };
 
-        setLastResult({ tierIndex: result.tierIndex, prize: result.prize });
+        setLastResult({
+          tierIndex: result.tierIndex,
+          prize: result.prize,
+          multiplier: appliedMultiplier,
+        });
         onRevealResult(index, result);
         setTimeout(() => onNavigateToCell(index), 100);
       } catch {
@@ -300,6 +314,8 @@ const CombinationInput = forwardRef<
             <span className="text-green-400">
               Winner! {config.tiers[lastResult.tierIndex]?.name} &mdash;{" "}
               {config.currency} {lastResult.prize.toLocaleString("en-US")}
+              {lastResult.multiplier !== undefined &&
+                ` (${lastResult.multiplier}\u00d7 multiplier)`}
             </span>
           ) : (
             <span className="text-red-400">

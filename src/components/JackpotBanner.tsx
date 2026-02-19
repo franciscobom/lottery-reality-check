@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { GridConfig, TallyState, Winner } from "@/types";
+import { useEffect, useRef } from "react";
+import { GridConfig, TallyState } from "@/types";
 import { LotteryCombination, formatCombination } from "@/lib/combination";
 import { playJackpotFanfare, playSadTune } from "@/lib/sounds";
 
@@ -10,9 +10,8 @@ interface JackpotBannerProps {
   tally: TallyState;
   gaveUp: boolean;
   combination: LotteryCombination;
-  token: string;
-  lotteryType: string;
   onClose: () => void;
+  onReset: () => void;
 }
 
 /* ── Confetti ─────────────────────────────────────────────── */
@@ -121,18 +120,11 @@ export default function JackpotBanner({
   tally,
   gaveUp,
   combination,
-  token,
-  lotteryType,
   onClose,
+  onReset,
 }: JackpotBannerProps) {
-  const [name, setName] = useState("");
-  const [registering, setRegistering] = useState(false);
-  const [registered, setRegistered] = useState(false);
-  const [regError, setRegError] = useState<string | null>(null);
-  const [winners, setWinners] = useState<Winner[]>([]);
   const soundPlayed = useRef(false);
 
-  // Play sound on mount
   useEffect(() => {
     if (soundPlayed.current) return;
     soundPlayed.current = true;
@@ -143,58 +135,25 @@ export default function JackpotBanner({
     }
   }, [gaveUp]);
 
-  // Fetch winners
-  useEffect(() => {
-    fetch(`/api/winners?lotteryType=${encodeURIComponent(lotteryType)}`)
-      .then((r) => r.json())
-      .then((d) => setWinners(d.winners || []))
-      .catch(() => {});
-  }, [lotteryType]);
-
-  const handleRegister = useCallback(async () => {
-    if (!name.trim()) return;
-    setRegError(null);
-    setRegistering(true);
-    try {
-      const res = await fetch("/api/winners", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          name: name.trim(),
-          ticketsRevealed: tally.revealed,
-          amountSpent: tally.spent,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setRegError(data.error || "Failed to register");
-        return;
-      }
-      setRegistered(true);
-      // Refresh winners list
-      const wr = await fetch(
-        `/api/winners?lotteryType=${encodeURIComponent(lotteryType)}`
-      );
-      const wd = await wr.json();
-      setWinners(wd.winners || []);
-    } catch {
-      setRegError("Network error");
-    } finally {
-      setRegistering(false);
-    }
-  }, [name, token, tally, lotteryType]);
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
       {!gaveUp && <ConfettiCanvas />}
 
       <div
-        className="relative z-20 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-2xl border text-center max-h-[90vh] overflow-y-auto"
-        style={{
-          backgroundColor: gaveUp ? "rgb(30 20 20)" : "rgb(20 20 30)",
-          borderColor: gaveUp ? "rgb(100 50 50)" : "rgb(180 140 20)",
-        }}
+        className="relative z-20 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-2xl text-center max-h-[90vh] overflow-y-auto"
+        style={
+          gaveUp
+            ? {
+                backgroundColor: "rgb(30 20 20)",
+                border: "1px solid rgb(100 50 50)",
+              }
+            : {
+                backgroundColor: "rgb(12 10 20)",
+                border: "3px solid rgb(251 191 36)",
+                boxShadow:
+                  "0 0 40px rgba(251,191,36,0.45), 0 0 100px rgba(251,191,36,0.18)",
+              }
+        }
       >
         {gaveUp ? (
           <>
@@ -208,12 +167,16 @@ export default function JackpotBanner({
           </>
         ) : (
           <>
-            <h2 className="text-3xl sm:text-4xl font-bold font-mono mb-2 text-amber-400 animate-pulse">
+            <h2 className="text-3xl sm:text-5xl font-bold font-mono mb-3 text-amber-400 animate-pulse">
               CONGRATULATIONS!
             </h2>
             <p className="text-amber-300/80 font-mono text-sm mb-4">
-              Did you get lucky, or did you mastermind your way here?
+              Did you get lucky, did you mastermind your way here,
+              or did you just peek at the seed in DevTools?{" "}
               Either way — well done, you absolute maniac.
+            </p>
+            <p className="text-orange-400 font-mono text-lg sm:text-2xl font-bold mb-4">
+              Don&apos;t forget to pay your taxes! 💸
             </p>
           </>
         )}
@@ -257,71 +220,20 @@ export default function JackpotBanner({
           )}
         </div>
 
-        {/* Name registration (only for legit wins) */}
-        {!gaveUp && !registered && (
-          <div className="mb-6">
-            <p className="text-amber-300/60 font-mono text-xs mb-2">
-              Etch your name in history:
-            </p>
-            <div className="flex gap-2 justify-center">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setRegError(null);
-                }}
-                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-                placeholder="Your name"
-                maxLength={30}
-                className="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg font-mono text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-slate-600 w-48"
-              />
-              <button
-                onClick={handleRegister}
-                disabled={registering || !name.trim()}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-mono text-sm font-bold hover:bg-amber-500 disabled:opacity-50 transition-colors"
-              >
-                {registering ? "..." : "Register"}
-              </button>
-            </div>
-            {regError && (
-              <p className="text-red-400 font-mono text-xs mt-1">{regError}</p>
-            )}
-          </div>
-        )}
-
-        {!gaveUp && registered && (
-          <p className="text-green-400 font-mono text-sm mb-6">
-            Added to the winners board!
-          </p>
-        )}
-
-        {/* Winners board */}
-        {winners.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-slate-400 font-mono text-xs uppercase tracking-wider mb-2">
-              Winners Board
-            </h3>
-            <div className="max-h-32 overflow-y-auto">
-              {winners.slice(0, 10).map((w, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between font-mono text-xs text-slate-500 py-0.5"
-                >
-                  <span className="text-slate-300">{w.name}</span>
-                  <span>{w.ticketsRevealed.toLocaleString()} tickets</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={onClose}
-          className="px-6 py-2 bg-slate-700 text-slate-300 rounded-lg font-mono text-sm hover:bg-slate-600 transition-colors"
-        >
-          {gaveUp ? "Back to Reality" : "Continue Playing"}
-        </button>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-slate-700 text-slate-300 rounded-lg font-mono text-sm hover:bg-slate-600 transition-colors"
+          >
+            Back to Board
+          </button>
+          <button
+            onClick={onReset}
+            className="px-5 py-2 bg-red-800 text-red-100 rounded-lg font-mono text-sm font-bold hover:bg-red-700 transition-colors"
+          >
+            RESET
+          </button>
+        </div>
       </div>
     </div>
   );

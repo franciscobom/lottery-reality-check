@@ -7,6 +7,9 @@ interface LotterySelectorProps {
 
 const LOTTERY_OPTIONS = [
   { id: "euromillions", name: "EuroMillions" },
+  { id: "eurojackpot", name: "EuroJackpot" },
+  { id: "powerball", name: "Powerball" },
+  { id: "megamillions", name: "Mega Millions" },
 ];
 
 export default function LotterySelector({
