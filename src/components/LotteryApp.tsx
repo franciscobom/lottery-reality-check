@@ -45,9 +45,9 @@ const LOTTERY_DESCRIPTIONS: Record<string, string> = {
   eurojackpot:
     "Jackpots up to €120M across 18 European countries. Pick 5 from 50 + 2 Euro Numbers from 12. The jackpot and top 3 prize tiers scale; smaller prizes are stable.",
   powerball:
-    "America's most famous jackpot lottery. Pick 5 from 69 + 1 Powerball from 26. All secondary prizes are fixed regardless of jackpot size.",
+    "America's most famous jackpot lottery. Pick 5 from 69 + 1 Powerball from 26. All secondary prizes are fixed. Jackpot shown as lump sum (cash option) — and don't forget taxes.",
   megamillions:
-    "America's other giant. Pick 5 from 70 + 1 Megaball from 24. Fixed secondary prizes, but every ticket includes the Megaplier (2×–10×).",
+    "America's other giant. Pick 5 from 70 + 1 Megaball from 24. Fixed secondary prizes, every ticket includes the Megaplier (2×–10×). Jackpot shown as lump sum — and don't forget taxes.",
 };
 
 function formatJackpot(amount: number, currency: string): string {
@@ -234,8 +234,6 @@ export default function LotteryApp() {
     async (indices: number[]) => {
       if (!jackpotComboRef.current || !effectiveConfig || isRevealing) return;
 
-      setIsRevealing(true);
-
       try {
         // Convert grid indices → combo indices
         const comboIndices = gridToComboBatch(
@@ -283,6 +281,9 @@ export default function LotteryApp() {
             : count < 10
             ? count * 120
             : Math.min(30000, 500 * Math.sqrt(count));
+
+        // Only show the "Revealing…" overlay when there is a real animation delay
+        if (totalMs > 0) setIsRevealing(true);
         const TICK_MS = 16;
         const numTicks = Math.max(1, Math.ceil(totalMs / TICK_MS));
 
@@ -485,9 +486,13 @@ export default function LotteryApp() {
     const introAmount = jackpotAmount || introLc.jackpotDefault;
     const introStep = introLc.jackpotMax > 500_000_000 ? 10_000_000 : 1_000_000;
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-950 overflow-y-auto py-4">
+      <div className="flex items-start justify-center min-h-screen bg-slate-950 overflow-y-auto py-4">
         <div className="max-w-lg w-full mx-4 p-6 bg-slate-900 rounded-2xl border border-slate-700">
-          <h2 className="text-3xl font-bold text-slate-100 font-mono mb-2">
+          <h1 className="text-3xl font-bold text-slate-100 font-mono mb-3">
+            Lottery Reality Check
+          </h1>
+          <hr className="border-white mb-4" />
+          <h2 className="text-xl font-bold text-slate-100 font-mono mb-2">
             Pick your poison.
           </h2>
           <p className="text-slate-400 font-mono text-sm mb-5">
@@ -549,7 +554,7 @@ export default function LotteryApp() {
             <div className="flex justify-between text-slate-500 font-mono text-xs mt-1">
               <span>{formatJackpot(introLc.jackpotMin, introLc.currency)}</span>
               <span>
-                {formatJackpot(introLc.jackpotDefault, introLc.currency)} default
+                {formatJackpot(introLc.jackpotDefault, introLc.currency)} avg. jackpot
               </span>
               <span>{formatJackpot(introLc.jackpotMax, introLc.currency)}</span>
             </div>
@@ -687,11 +692,6 @@ export default function LotteryApp() {
           )}
         </div>
 
-        <div className="text-slate-500 font-mono text-xs hidden sm:block">
-          {effectiveConfig.totalCombinations.toLocaleString()} possible tickets
-          &middot; {effectiveConfig.currency}{" "}
-          {effectiveConfig.costPerPlay.toFixed(2)} each
-        </div>
       </header>
 
       {/* Tally bar + Combination input */}

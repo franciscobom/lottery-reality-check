@@ -61,8 +61,8 @@ export default function Tally({
     <div className="flex gap-3 sm:gap-4 p-2.5 sm:p-4 bg-slate-900/80 backdrop-blur-sm rounded-xl border border-slate-800 h-full">
       {/* Left: stats in two rows */}
       <div className="flex flex-col gap-1 flex-1 min-w-0">
-        {/* Row 1: Spent / Won / Net */}
-        <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+        {/* Row 1: Spent / Won / Net — stacked on mobile, inline on desktop */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0.5 sm:gap-6">
           <div className="flex flex-col">
             <span className="text-slate-500 text-[10px] sm:text-xs font-mono uppercase tracking-wider">
               Spent
@@ -141,22 +141,31 @@ export default function Tally({
         </div>
       </div>
 
-      {/* Right: progress bar + give up + reset, vertically centered */}
-      <div className="flex flex-col items-end justify-center gap-2 shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-24 sm:w-36 h-3 sm:h-4 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-300"
-              style={{
-                width: `${giveUpProgress * 100}%`,
-                backgroundColor: "#2563eb",
-              }}
-            />
-          </div>
+      {/* Right: lottery info + progress bar + give up + reset */}
+      <div className="flex flex-col items-end justify-between shrink-0">
+        {/* Ticket/cost info — top right */}
+        <div className="flex flex-col sm:flex-row items-end sm:items-center text-slate-500 font-mono text-xs sm:gap-1.5">
+          <span>{config.totalCombinations.toLocaleString()} tickets</span>
+          <span className="hidden sm:inline">·</span>
+          <span>{config.currency} {config.costPerPlay.toFixed(2)} each</span>
+        </div>
+        {/* Progress bar + buttons — bottom right */}
+        <div className="flex flex-col items-end gap-1.5">
+        <div className="w-full sm:w-36 h-3 sm:h-4 bg-slate-800 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${giveUpProgress * 100}%`,
+              backgroundColor: "#2563eb",
+            }}
+          />
+        </div>
+        {/* Buttons — same size, side by side */}
+        <div className="flex gap-1.5">
           <button
             onClick={onGiveUp}
             disabled={!giveUpReady || givingUp || jackpotFound}
-            className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg font-mono text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all whitespace-nowrap ${
               giveUpReady && !jackpotFound
                 ? "bg-red-600 text-white hover:bg-red-500 animate-pulse"
                 : "bg-slate-800 text-slate-600 cursor-not-allowed"
@@ -169,13 +178,14 @@ export default function Tally({
           >
             {givingUp ? "..." : "GIVE UP"}
           </button>
+          <button
+            onClick={onReset}
+            className="px-2.5 sm:px-3 py-1.5 rounded-lg font-mono text-xs font-bold text-yellow-900 bg-yellow-500 hover:bg-yellow-400 transition-colors whitespace-nowrap"
+          >
+            Reset
+          </button>
         </div>
-        <button
-          onClick={onReset}
-          className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg font-mono text-[10px] sm:text-xs text-yellow-900 font-bold bg-yellow-500 hover:bg-yellow-400 transition-colors whitespace-nowrap"
-        >
-          Reset
-        </button>
+        </div>
       </div>
     </div>
   );
