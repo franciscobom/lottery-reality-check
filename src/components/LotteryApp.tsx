@@ -482,10 +482,19 @@ export default function LotteryApp() {
     if (typeof navigator.share === "function") {
       navigator.share({ title: "Face the Odds", url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url).then(() => {
-        setHeaderCopied(true);
-        setTimeout(() => setHeaderCopied(false), 2000);
-      });
+      const doSet = () => { setHeaderCopied(true); setTimeout(() => setHeaderCopied(false), 2000); };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(doSet).catch(() => {});
+      } else {
+        const el = document.createElement("textarea");
+        el.value = url;
+        el.style.cssText = "position:fixed;opacity:0";
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        doSet();
+      }
     }
   }, []);
 
