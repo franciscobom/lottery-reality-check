@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { GridConfig, TallyState } from "@/types";
 import { LotteryCombination, formatCombination } from "@/lib/combination";
 import { playJackpotFanfare, playSadTune } from "@/lib/sounds";
@@ -124,6 +124,23 @@ export default function JackpotBanner({
   onReset,
 }: JackpotBannerProps) {
   const soundPlayed = useRef(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = useCallback(() => {
+    const url = window.location.href;
+    const text = gaveUp
+      ? `I gave up on Lottery Reality Check after ${tally.revealed.toLocaleString()} tickets. Can you do better?`
+      : `I found the jackpot in Lottery Reality Check! Spent ${config.currency} ${tally.spent.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Try to beat that.`;
+
+    if (typeof navigator.share === "function") {
+      navigator.share({ title: "Lottery Reality Check", text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
+  }, [gaveUp, tally, config]);
 
   useEffect(() => {
     if (soundPlayed.current) return;
@@ -220,12 +237,18 @@ export default function JackpotBanner({
           )}
         </div>
 
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center flex-wrap">
           <button
             onClick={onClose}
             className="px-5 py-2 bg-slate-700 text-slate-300 rounded-lg font-mono text-sm hover:bg-slate-600 transition-colors"
           >
             Back to Board
+          </button>
+          <button
+            onClick={handleShare}
+            className="px-5 py-2 bg-slate-700 text-slate-300 rounded-lg font-mono text-sm hover:bg-slate-600 transition-colors"
+          >
+            {copied ? "Copied!" : "Share"}
           </button>
           <button
             onClick={onReset}
